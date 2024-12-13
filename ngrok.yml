@@ -4,4 +4,4 @@ tunnels:
     n8n:
         proto: http
         addr: n8n:5678
-        domain: related-unbiased-man.ngrok-free.app
+        domain: probably-winning-tadpole.ngrok-free.app

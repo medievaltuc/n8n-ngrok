@@ -28,8 +28,38 @@ services:
     volumes:
       - ./ngrok.yml:/etc/ngrok.yml
 
+  postgres:
+    container_name: postgres
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER=postgres
+      POSTGRES_PASSWORD=root
+      POSTGRES_DB=n8nbase
+    ports:
+      - "5432:5432"
+    networks:
+      - n8n-network
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL=darganaraz@jugoscitric.com
+      PGADMIN_DEFAULT_PASSWORD=admin
+    ports:
+      - "5050:80"
+    networks:
+      - n8n-network
+    depends_on:
+      - postgres      
+
 volumes:
   n8n_data:
+  postgres_data:
 
 networks:
   n8n-network:
