@@ -47,7 +47,7 @@ def obtener_facturas(id_usuario: int, estado: str = "pendiente"):
     except psycopg2.Error as e:
         raise HTTPException(status_code=500, detail=f"Error en la base de datos: {e}")
 
-#Registrar datos en la tabla facturas
+#actualizar datos en la tabla facturas
 @app.patch("/facturas/{id_factura}")
 def actualizar_factura(id_factura: int, factura: FacturaUpdate):
     try:
@@ -102,6 +102,8 @@ def buscar_registros(
     except psycopg2.Error as e:
         raise HTTPException(status_code=500, detail=f"Error en la base de datos: {e}")
 
+
+#Agregar datos obtenidos del formulario en tabla facturas
 @app.post("/facturas")
 def agregar_factura(factura: dict):
     """
@@ -112,26 +114,26 @@ def agregar_factura(factura: dict):
         with conn.cursor() as cursor:
             query = """
                 INSERT INTO facturas (
-                    numero_factura, id_usuario, id_proveedor, id_sector, estado, tipo_factura,
+                    id_factura, id_usuario, id_proveedor, id_sector, estado, tipo_factura,
                     importe_neto, importe_total, moneda, numero_oc, dias_vencida, comentarios, fecha
                 )
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id_factura
             """
             cursor.execute(query, (
-                factura.get("Numero de Factura"),
+                factura.get("id_factura"),
                 factura.get("id_usuario"),
                 factura.get("id_proveedor"),
                 factura.get("id_sector"),
-                factura.get("Estado"),
-                factura.get("Tipo de Factura"),
-                factura.get("Importe Neto"),
-                factura.get("Importe Total"),
-                factura.get("Moneda"),
-                factura.get("Numero de OC"),
-                factura.get("Dias Vencida"),
-                factura.get("Comentarios"),
-                factura.get("Fecha")
+                factura.get("estado"),  # Cambiado a minúscula
+                factura.get("tipo_factura"),
+                factura.get("importe_neto"),
+                factura.get("importe_total"),
+                factura.get("moneda"),
+                factura.get("numero_oc"),
+                factura.get("dias_vencida"),
+                factura.get("comentarios"),
+                factura.get("fecha")
             ))
             nueva_factura = cursor.fetchone()
             conn.commit()
