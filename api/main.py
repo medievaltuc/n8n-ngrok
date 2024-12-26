@@ -47,31 +47,7 @@ def obtener_facturas(id_usuario: int, estado: str = "pendiente"):
     except psycopg2.Error as e:
         raise HTTPException(status_code=500, detail=f"Error en la base de datos: {e}")
 
-#actualizar datos en la tabla facturas
-@app.patch("/facturas/{id_factura}")
-def actualizar_factura(id_factura: int, factura: FacturaUpdate):
-    try:
-        conn = get_db_connection()
-        with conn.cursor() as cursor:
-            query = """
-                UPDATE facturas
-                SET estado = COALESCE(%s, estado),
-                    numero_oc = COALESCE(%s, numero_oc),
-                    comentarios = COALESCE(%s, comentarios)
-                WHERE id_factura = %s
-                RETURNING id_factura
-            """
-            cursor.execute(query, (factura.estado, factura.numero_oc, factura.comentarios, id_factura))
-            resultado = cursor.fetchone()
-            conn.commit()
 
-        conn.close()
-
-        if resultado is None:
-            raise HTTPException(status_code=404, detail="Factura no encontrada.")
-        return {"message": "Factura actualizada correctamente", "id_factura": resultado["id_factura"]}
-    except psycopg2.Error as e:
-        raise HTTPException(status_code=500, detail=f"Error en la base de datos: {e}")
 
 #Buscar y modificar lo que recibe el trigger formulario y lo transforma para poder ser enviados a facturas nuevas
 @app.get("/buscar/")
@@ -143,6 +119,65 @@ def agregar_factura(factura: dict):
             return {"message": "Factura agregada con éxito", "id_factura": nueva_factura["id_factura"]}
         else:
             raise HTTPException(status_code=500, detail="No se pudo agregar la factura.")
+    except psycopg2.Error as e:
+        raise HTTPException(status_code=500, detail=f"Error en la base de datos: {e}")
+    finally:
+        if conn:
+            conn.close()
+            
+            
+# Obtener una factura específica por número de factura
+@app.get("/facturas/numero/{id_factura}")
+def obtener_factura_por_numero(id_factura: int):
+    """
+    Obtiene los datos de una factura específica para mostrarlos al usuario.
+    """
+    try:
+        conn = get_db_connection()
+        with conn.cursor() as cursor:
+            query = "SELECT * FROM facturas WHERE id_factura = %s"
+            cursor.execute(query, (id_factura,))
+            factura = cursor.fetchone()
+        conn.close()
+
+        if factura is None:
+            raise HTTPException(status_code=404, detail="Factura no encontrada.")
+        
+        return factura
+    except psycopg2.Error as e:
+        raise HTTPException(status_code=500, detail=f"Error en la base de datos: {e}")
+
+# Actualizar datos de una factura existente
+@app.patch("/facturas/numero/{id_factura}")
+def actualizar_factura(id_factura: int, factura: FacturaUpdate):
+    """
+    Actualiza los datos de una factura existente en la base de datos.
+    """
+    try:
+        conn = get_db_connection()
+        with conn.cursor() as cursor:
+            query = """
+                UPDATE facturas
+                SET estado = COALESCE(%s, estado),
+                    numero_oc = COALESCE(%s, numero_oc),
+                    comentarios = COALESCE(%s, comentarios)
+                WHERE id_factura = %s
+                RETURNING id_factura
+            """
+            cursor.execute(query, (
+                factura.estado or "completado",  # Si no se envía, marcar como "completado"
+                factura.numero_oc,
+                factura.comentarios,
+                id_factura
+            ))
+            resultado = cursor.fetchone()
+            conn.commit()
+
+        if resultado is None:
+            raise HTTPException(status_code=404, detail="Factura no encontrada.")
+        
+        # Mensaje de éxito
+        return {"message": "Factura actualizada correctamente", "id_factura": resultado["id_factura"]}
     except psycopg2.Error as e:
         raise HTTPException(status_code=500, detail=f"Error en la base de datos: {e}")
     finally:
