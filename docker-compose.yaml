@@ -71,11 +71,27 @@ services:
       - n8n-network
     depends_on:
       - postgres
+  
+  wppconnect:
+    image: wppconnectteam/wppconnect-server:latest
+    container_name: wppconnect
+    ports:
+      - "21465:21465" # Puerto del servidor
+    environment:
+      - PORT=21465
+      - START_ALL_SESSIONS=false
+      - USE_HEROKU=false
+      - TOKEN_SECRET=mi_token_secreto
+      - JWT_SECRET=mi_jwt_secreto
+      - API_AUTO_INITIATE=false
+    volumes:
+      - ./wppconnect-data:/app/data
     
 
 volumes:
   n8n_data:
   postgres_data:
+  pgadmin_data:
 
 networks:
   n8n-network:
