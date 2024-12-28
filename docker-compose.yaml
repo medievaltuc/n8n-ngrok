@@ -81,11 +81,14 @@ services:
       - PORT=21465
       - START_ALL_SESSIONS=false
       - USE_HEROKU=false
-      - TOKEN_SECRET=mi_token_secreto
-      - JWT_SECRET=mi_jwt_secreto
+      - TOKEN_SECRET=cf8abb4b3ae436900a5452622b8634a7bcf6ca4b033e7d2ed1ad9d2aa34e993f
+      - JWT_SECRET=36e46813814c20516788c0cb655f232d02a2002ec42b67abcd9f35dc3a8f75c2
       - API_AUTO_INITIATE=false
     volumes:
       - ./wppconnect-data:/app/data
+    depends_on:
+      - postgres
+      - fastapi
     
 
 volumes:
